@@ -1,0 +1,12 @@
+node_modules/
+.venv/
+.tmp/
+
+# Course material: real assignment documents and Canvas exports. Tests that use them skip when absent.
+examples/
+*.docx
+*.pdf
+*-quiz-export*.zip
+canvas-newquiz-qti*.zip
+7bf013b37d645ff5b4432b4db47ccac41e9b050d016ccdf2524debb9ac632dfe.zip
+dist/

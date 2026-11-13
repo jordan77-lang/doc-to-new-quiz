@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doc to New Quiz</title>
+  <link rel="stylesheet" href="src/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="hero">
+      <h1>Doc to New Quiz</h1>
+      <p>Upload an assignment document. Review the questions it finds and fix anything flagged, then download a file Canvas imports as a <strong>New Quiz</strong> or a <strong>question bank</strong>.</p>
+      <ol class="hero-steps" aria-label="How it works">
+        <li><span>1</span>Upload the .docx</li>
+        <li><span>2</span>Review and fix</li>
+        <li><span>3</span>Choose quiz or bank</li>
+        <li><span>4</span>Import into Canvas</li>
+      </ol>
+    </div>
+  </header>
+
+  <main>
+    <section class="card" aria-labelledby="step1">
+      <h2 id="step1"><span class="step">1</span>Upload the assignment document</h2>
+      <label id="drop-zone" class="drop-zone" for="docx-input">
+        <input id="docx-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+        <span class="drop-title">Drop a .docx file here, or click to choose one</span>
+        <span class="drop-hint">Questions, answers marked <code>[*]</code>, <code>[NUMERIC ANSWER]</code> blocks, feedback, images and tables are read automatically.</span>
+      </label>
+      <ul class="checklist">
+        <li>In Google Docs, <strong>accept or reject all suggestions</strong> and resolve comments first.</li>
+        <li>Then use <strong>File → Download → Microsoft Word (.docx)</strong>.</li>
+        <li>Follow the <a href="https://github.com/jordan77-lang/doc-to-new-quiz/blob/main/docs/authoring-conventions.md" target="_blank" rel="noopener">authoring guide</a> (Heading 2 for steps, Heading 4 for Directions, <code>[*]</code> after correct choices).</li>
+      </ul>
+      <div id="docx-report" class="import-report" hidden></div>
+
+      <details class="other-ways">
+        <summary>Other ways to add questions: spreadsheet, paste or example</summary>
+        <div class="other-ways-body">
+          <div class="template-links">
+            <a class="btn small secondary" href="templates/question-template.xlsx" download>Excel template</a>
+            <a class="btn small secondary" href="templates/question-template.csv" download>CSV template</a>
+            <a class="btn small secondary" href="templates/blank-template.xlsx" download>Blank template</a>
+            <a class="btn small secondary" href="https://github.com/jordan77-lang/doc-to-new-quiz/blob/main/templates/README.md" target="_blank" rel="noopener">Column guide</a>
+            <a class="btn small secondary" href="https://github.com/jordan77-lang/doc-to-new-quiz/blob/main/templates/GoogleSheetSetup.md" target="_blank" rel="noopener">Google Sheets setup</a>
+          </div>
+          <div class="input-grid">
+            <div>
+              <label for="file-input">Upload a spreadsheet</label>
+              <input id="file-input" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls,.ods,.json" />
+              <div class="hint">CSV, TSV, Excel or JSON. For Excel, the sheet named “Questions” is used (or the first sheet). A spreadsheet downloaded from step 1 can be edited and uploaded here.</div>
+              <button id="example-btn" class="btn secondary small" type="button">Load example questions</button>
+            </div>
+            <div>
+              <label for="paste-area">Paste rows</label>
+              <textarea id="paste-area" placeholder="Copy cells from Excel or Google Sheets, including the header row, and paste here. CSV and JSON work too."></textarea>
+              <button id="parse-btn" class="btn small" type="button">Read pasted rows</button>
+            </div>
+          </div>
+          <div id="source-status" class="status" role="status"></div>
+          <div class="images-block">
+            <label for="image-input">Images</label>
+            <input id="image-input" type="file" accept="image/*" multiple />
+            <div class="hint">Images from a Word document are added automatically. For a spreadsheet, add the image files its rows name in the <code>image</code> column or in <code>&lt;img src="…"&gt;</code>.</div>
+            <ul id="image-list" class="image-list"></ul>
+            <button id="clear-images" class="btn secondary small" type="button" hidden>Remove all images</button>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="card" aria-labelledby="step2">
+      <h2 id="step2"><span class="step">2</span>Review and fix</h2>
+      <div id="summary" class="status" role="status"></div>
+      <div id="issues"></div>
+      <p class="hint" id="review-hint">Each item shows what students will see. Click <strong>Edit</strong> on any item to change it, or <strong>From the document</strong> to compare it with the source.</p>
+      <div id="question-preview" class="preview"></div>
+    </section>
+
+    <section class="card" aria-labelledby="step3">
+      <h2 id="step3"><span class="step">3</span>Choose what to export</h2>
+      <div class="mode-choice" role="radiogroup" aria-label="What to export">
+        <label class="mode-card">
+          <input type="radio" name="export-mode" value="quiz" checked>
+          <span class="mode-title">New Quiz <span class="badge">Recommended</span></span>
+          <span class="mode-desc">Everything: instructions, objectives and steps, directions and questions. Imports as an unpublished New Quiz with the settings below.</span>
+        </label>
+        <label class="mode-card">
+          <input type="radio" name="export-mode" value="bank">
+          <span class="mode-title">Question bank</span>
+          <span class="mode-desc">Just the questions, with the directions they belong to. Use it to reuse or randomize questions across quizzes.</span>
+        </label>
+      </div>
+
+      <div class="settings-grid">
+        <label><span id="title-label">Quiz title</span>
+          <input id="default-title" type="text" placeholder="Taken from the document">
+          <span class="hint">Filled in from the document. Change it here if you like.</span>
+        </label>
+        <label>Points per question
+          <input id="default-points" type="number" value="1" min="0" step="0.5">
+          <span class="hint">For questions without their own points.</span>
+        </label>
+        <label>Calculator
+          <select id="calculator">
+            <option value="none" selected>None</option>
+            <option value="basic">Basic</option>
+            <option value="scientific">Scientific</option>
+          </select>
+        </label>
+        <label class="check"><input id="partial-credit" type="checkbox"> Partial credit on multiple-answer questions</label>
+      </div>
+
+      <fieldset id="quiz-settings" class="quiz-settings">
+        <legend>Quiz settings</legend>
+        <div class="settings-grid">
+          <label>Allowed attempts
+            <input id="allowed-attempts" type="number" value="1" min="0" step="1">
+            <span class="hint">0 = unlimited.</span>
+          </label>
+          <label class="check"><input id="shuffle-questions" type="checkbox"> Shuffle questions</label>
+          <label class="check"><input id="shuffle-answers" type="checkbox"> Shuffle answers</label>
+          <label class="check"><input id="show-correct" type="checkbox"> Show students the correct answers after submitting</label>
+          <label class="wide">Quiz instructions
+            <textarea id="description" class="short" placeholder="Shown to students before they start. Filled in from the document's opening text (mission memo, overview)."></textarea>
+          </label>
+        </div>
+      </fieldset>
+      <p id="bank-note" class="hint bank-note" hidden>Text blocks, the quiz instructions and quiz settings aren't part of a bank. Directions stay with the questions that use them. <strong>Not yet confirmed:</strong> where an imported bank shows up in your New Quizzes courses. Try it once in a sandbox course.</p>
+
+      <details class="advanced">
+        <summary>Advanced</summary>
+        <label>File format
+          <select id="target">
+            <option value="canvas" selected>Canvas QTI (New Quizzes)</option>
+            <option value="qti21">Generic QTI 2.1 (experimental)</option>
+          </select>
+        </label>
+        <p id="experimental-note" class="hint warn-text" hidden>Generic QTI 2.1 is only for ordering, categorization and hotspot questions, and Canvas's support for it is unconfirmed. It ignores quiz/bank choice, settings, stimulus links and images.</p>
+      </details>
+
+      <div class="download-row">
+        <button id="generate-btn" class="btn big" type="button">Download New Quiz (.zip)</button>
+        <div id="download-status" class="status" role="status"></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="step4">
+      <h2 id="step4"><span class="step">4</span>Import into Canvas</h2>
+      <div class="import-steps">
+        <div>
+          <h3>Import the .zip</h3>
+          <ol>
+            <li>In the course, open <strong>Settings</strong> and click <strong>Import Course Content</strong>.</li>
+            <li>Content Type: <strong>QTI .zip file</strong>. Choose the downloaded zip.</li>
+            <li>If you see <strong>Import existing quizzes as New Quizzes</strong>, make sure it's ticked.</li>
+            <li>Choose <strong>All content</strong> and click <strong>Import</strong>. Wait for the job to show <em>Completed</em>.</li>
+          </ol>
+        </div>
+        <div id="steps-quiz">
+          <h3>Then check the quiz</h3>
+          <ul>
+            <li>The quiz is under <strong>Quizzes</strong>, unpublished. Open it in <strong>Build</strong>.</li>
+            <li>Take it in <strong>Student View</strong> and answer a few questions to confirm scoring.</li>
+            <li>Images are in the course files under <em>Uploaded Media</em>.</li>
+            <li>Publish when it looks right.</li>
+          </ul>
+        </div>
+        <div id="steps-bank" hidden>
+          <h3>Then find the bank</h3>
+          <ul>
+            <li>In a New Quiz, open <strong>Build</strong> and the <strong>Item Banks</strong> panel to look for a bank with this title.</li>
+            <li>If your course still shows Classic tools, look under <strong>Quizzes → ⋮ → Manage Question Banks</strong>.</li>
+            <li>Add questions from the bank to a quiz, or set up a question group that draws from it.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="hint">Import into a sandbox course first for new documents.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Runs entirely in your browser. Your documents and questions aren't uploaded anywhere.</p>
+  </footer>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

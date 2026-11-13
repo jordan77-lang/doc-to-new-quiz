@@ -1,0 +1,23 @@
+{
+  "name": "canvas-qti-builder",
+  "version": "2.0.0",
+  "description": "Create Canvas New Quizzes QTI packages from spreadsheets",
+  "type": "module",
+  "scripts": {
+    "dev": "npx serve -l 3001",
+    "test": "node --test \"test/*.test.js\"",
+    "templates": "node scripts/build-templates.js",
+    "package": "node scripts/make-package.js",
+    "inspect": "node scripts/inspect-docx.js",
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0",
+    "fast-xml-parser": "^4.5.0",
+    "jszip": "^3.10.1",
+    "linkedom": "^0.18.5",
+    "mammoth": "^1.8.0",
+    "xlsx": "^0.18.5"
+  },
+  "license": "MIT"
+}

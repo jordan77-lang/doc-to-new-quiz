@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["alt", "decorative", "long_description_needed", "problems"],
+  "properties": {
+    "alt": { "type": "string", "maxLength": 250 },
+    "decorative": { "type": "boolean" },
+    "long_description_needed": { "type": "boolean" },
+    "problems": { "type": "array", "maxItems": 3, "items": { "type": "string", "maxLength": 300 } }
+  }
+}

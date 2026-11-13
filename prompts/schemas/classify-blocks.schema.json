@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["labels"],
+  "properties": {
+    "labels": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["block_id", "label", "confidence"],
+        "properties": {
+          "block_id": { "type": "string", "maxLength": 40 },
+          "label": { "type": "string", "enum": ["quiz_description", "section_heading", "step_heading", "narrative", "directions", "question", "figure_caption", "table", "reminder", "closing", "instructor_only", "document_control", "noise"] },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+        }
+      }
+    }
+  }
+}

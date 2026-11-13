@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["overall", "suggestions"],
+  "properties": {
+    "overall": { "type": "string", "enum": ["ok", "needs_changes"] },
+    "suggestions": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "severity", "problem", "quote", "proposed_value"],
+        "properties": {
+          "field": { "type": "string", "enum": ["title", "question", "choices", "correct", "numeric_answer", "numeric_tolerance", "feedback_general", "feedback_correct", "feedback_incorrect", "image_alt", "partial_credit", "upload_file_types", "other"] },
+          "severity": { "type": "string", "enum": ["error", "warning", "idea"] },
+          "problem": { "type": "string", "maxLength": 400 },
+          "quote": { "type": "string", "maxLength": 600 },
+          "proposed_value": { "type": "string", "maxLength": 4000 }
+        }
+      }
+    }
+  }
+}

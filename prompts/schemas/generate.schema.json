@@ -1,0 +1,60 @@
+{
+  "$comment": "items[] use the same shape as item.schema.json (kept inline because WebLLM needs one self-contained schema).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "title", "question", "choices", "accepted_answers", "matching_pairs", "numeric_answer", "numeric_tolerance", "numeric_min", "numeric_max", "feedback_general", "feedback_correct", "feedback_incorrect", "source_quote", "problems", "confidence"],
+        "properties": {
+          "type": { "type": "string", "enum": ["multiple_choice", "multiple_answer", "true_false", "short_answer", "numeric", "matching", "essay", "file_upload"] },
+          "title": { "type": "string", "maxLength": 120 },
+          "question": { "type": "string", "maxLength": 4000 },
+          "choices": {
+            "type": "array",
+            "maxItems": 12,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["text", "correct"],
+              "properties": {
+                "text": { "type": "string", "maxLength": 1000 },
+                "correct": { "type": "boolean" }
+              }
+            }
+          },
+          "accepted_answers": { "type": "array", "maxItems": 10, "items": { "type": "string", "maxLength": 200 } },
+          "matching_pairs": {
+            "type": "array",
+            "maxItems": 12,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["left", "right"],
+              "properties": {
+                "left": { "type": "string", "maxLength": 300 },
+                "right": { "type": "string", "maxLength": 300 }
+              }
+            }
+          },
+          "numeric_answer": { "type": "string", "maxLength": 40 },
+          "numeric_tolerance": { "type": "string", "maxLength": 40 },
+          "numeric_min": { "type": "string", "maxLength": 40 },
+          "numeric_max": { "type": "string", "maxLength": 40 },
+          "feedback_general": { "type": "string", "maxLength": 6000 },
+          "feedback_correct": { "type": "string", "maxLength": 2000 },
+          "feedback_incorrect": { "type": "string", "maxLength": 2000 },
+          "source_quote": { "type": "string", "maxLength": 1000 },
+          "problems": { "type": "array", "maxItems": 5, "items": { "type": "string", "maxLength": 300 } },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low"] }
+        }
+      }
+    }
+  }
+}

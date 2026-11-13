@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["caption", "header", "rows", "left_over", "problems"],
+  "properties": {
+    "caption": { "type": "string", "maxLength": 300 },
+    "header": { "type": "array", "maxItems": 12, "items": { "type": "string", "maxLength": 120 } },
+    "rows": {
+      "type": "array",
+      "maxItems": 60,
+      "items": { "type": "array", "maxItems": 12, "items": { "type": "string", "maxLength": 300 } }
+    },
+    "left_over": { "type": "string", "maxLength": 1000 },
+    "problems": { "type": "array", "maxItems": 5, "items": { "type": "string", "maxLength": 300 } }
+  }
+}
