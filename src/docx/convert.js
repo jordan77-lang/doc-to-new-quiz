@@ -40,6 +40,11 @@ const RE = {
   typeTag: /\[\s*(essay(?: question)?|file upload|upload|short answer|fill in the blank)\s*\]/i,
   ungraded: /\b(zero[- ]point|ungraded|not graded|practice|0[- ]points?)\b/i,
   archive: /\b(archive|delete (this|when|before)|do not (publish|use|import)|not for students|draft only)\b/i,
+  // Closing messages at the end of an objective ("Good work, agent.", "Well done, colleague,", "Excellent work!")
+  signoff: /^(good|great|nice|excellent|outstanding|fantastic|superb|impressive|terrific|amazing|wonderful|brilliant|awesome)\s+(work|job|thinking|effort|going)\b|^(well done|congratulations|congrats|bravo|kudos|mission accomplished)\b/i,
+  letterFigure: /\b(letter|message|note) from\b|\bclosing out the (objective|step|mission)\b/i,
+  // Short salutation that opens a letter ("Fellow scientist,", "Agent,", "Dear team,")
+  salutation: /^(dear\s+[^,!:]{1,30}|(fellow|my)\s+\w+|agents?|colleagues?|interns?|team|everyone|scientists?|explorers?|astronomers?)\s*[,!:]$/i,
   // Instructor/design front matter that comes before the student content
   frontMatter: /\b(learning outcomes?|course goals?|style (formatting|guide)|performance expectations|ngss|standards alignment|alignment (table|map))\b|^(current (state|status)|draft status|revision (notes|history)|change ?log|version notes)\b/i,
   marker: /\s*\[\*\]\s*/g,
@@ -657,6 +662,18 @@ export function convertDocument(html, { parseHtml, fileName = '' }) {
         finishQuestion();
         nText += 1;
         items.push({ row: { id: `t${nText}`, type: 'text_only', title: 'Reminder' }, lines: [...moved, line], findings: [] });
+        continue;
+      }
+      // A closing message after the last question ("Good work, agent. … Rodney") is not feedback. Feedback is
+      // bold by the team's convention; the message isn't. It runs to the next heading and takes the letter
+      // image and its "Figure N. A letter from …" caption with it.
+      if (question.inFeedback && line.kind === 'p' && !line.boldOnly && (RE.signoff.test(line.text) || RE.salutation.test(line.text))) {
+        const moved = [];
+        const isLetterPart = (l) => (l.hasImg && !l.text) || (RE.figure.test(l.text) && (RE.letterFigure.test(l.text) || !l.boldOnly)) || RE.letterFigure.test(l.text);
+        while (question.lines.length > 1 && isLetterPart(question.lines[question.lines.length - 1])) moved.unshift(question.lines.pop());
+        finishQuestion();
+        newText(objective ? `${objective} closing message` : 'Closing message');
+        block.lines.push(...moved, line);
         continue;
       }
       // Only section-level headings (1–4) and directions end a question; Heading 5/6 lines are part of its feedback.

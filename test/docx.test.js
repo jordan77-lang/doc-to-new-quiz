@@ -72,7 +72,7 @@ test('findings: margin vs rounding (with fix), stray [*], drafted alt text, sugg
   assert.deepEqual(margin.fix, { label: 'Set margin to 0.01', field: 'numeric_tolerance', value: '0.01' });
   assert.match(findingsFor(r, 'q3')[0], /stray \[\*\] from the feedback/);
   assert.match(findingsFor(r, 't2')[0], /drafted from its figure caption/);
-  assert.match(byId(r, 't2').question, /<img src="image-01.png" alt="A lemonade stand with a price sign showing \$2 per cup.">/);
+  assert.match(byId(r, 't2').question, /<img src="image-01.png" width="96" height="96" alt="A lemonade stand with a price sign showing \$2 per cup.">/);
   assert.deepEqual(r.warnings.map((w) => w.severity), ['error', 'warning']);
   assert.match(r.warnings[0].message, /1 suggested edit/);
   assert.match(r.warnings[1].message, /2 comment/);
@@ -118,9 +118,18 @@ test('conventions from real Google Docs exports', async () => {
     's2:stimulus:Directions',
     'q4:multiple_choice:Question 4',
     'q5:essay:Question 5',
-    't5:text_only:Simulator help',
-    't6:text_only:Closing remarks',
+    't5:text_only:Objective 1 closing message',
+    't6:text_only:Simulator help',
+    't7:text_only:Closing remarks',
   ]);
+  // The closing letter is its own item (with its image and caption), not part of question 5's feedback
+  const closing = byId(r, 't5').question;
+  assert.match(closing, /Letter from the director\.[\s\S]*A letter from the director closing out[\s\S]*Well done, astronomer\.[\s\S]*Director Vega/);
+  assert.ok(!byId(r, 'q5').feedback_general.includes('Well done'));
+  // Image sizes from the document (EMU → px), and the side text wraps around
+  assert.match(byId(r, 't2').question, /<img [^>]*width="96" height="96"/);
+  assert.match(closing, /<img [^>]*alt="Letter from the director\."[^>]*width="300" height="200"|<img [^>]*width="300" height="200"[^>]*alt="Letter from the director\."/);
+  assert.match(closing, /<img [^>]*style="float: right;[^"]*"/);
   // front matter and archive sections are excluded
   assert.deepEqual(r.excluded.map((e) => e.heading), ['Learning Outcomes and Course Goals', 'Mission Training (ARCHIVE - delete when no longer needed)']);
   assert.ok(!JSON.stringify(r.rows).includes('Goal 1') && !JSON.stringify(r.rows).includes('old question'));
@@ -144,7 +153,7 @@ test('conventions from real Google Docs exports', async () => {
   assert.deepEqual([byId(r, 'q4').choice_1, byId(r, 'q4').choice_2, byId(r, 'q4').correct], ['Gravity', 'Friction', 'choice_1']);
   assert.equal(byId(r, 'q5').type, 'essay');
   // numbered instructions are text, not questions
-  assert.match(byId(r, 't5').question, /1\. Open the simulator/);
+  assert.match(byId(r, 't6').question, /1\. Open the simulator/);
 });
 
 test('margin warnings only when the margin is larger than the rounding asked for', async () => {

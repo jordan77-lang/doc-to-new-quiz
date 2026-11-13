@@ -20,11 +20,20 @@ function paragraph(block) {
   return `<w:p>${pPr ? `<w:pPr>${pPr}</w:pPr>` : ''}${body}</w:p>`;
 }
 
+// { image, alt, size: [cx, cy] in EMU (default 1 inch square), wrap: 'left' | 'right' (text wraps around it) }
 function imageParagraph(block, rId, id) {
-  return `<w:p><w:r><w:drawing><wp:inline><wp:extent cx="914400" cy="914400"/><wp:docPr id="${id}" name="Picture ${id}" descr="${esc(block.alt ?? '')}"/>`
-    + '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+  const [cx, cy] = block.size || [914400, 914400];
+  const graphic = '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
     + `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${id}" name="${esc(block.image)}"/><pic:cNvPicPr/></pic:nvPicPr>`
-    + `<pic:blipFill><a:blip r:embed="${rId}"/></pic:blipFill><pic:spPr/></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+    + `<pic:blipFill><a:blip r:embed="${rId}"/></pic:blipFill><pic:spPr/></pic:pic></a:graphicData></a:graphic>`;
+  const docPr = `<wp:docPr id="${id}" name="Picture ${id}" descr="${esc(block.alt ?? '')}"/>`;
+  const drawing = block.wrap
+    ? `<wp:anchor simplePos="0" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1" relativeHeight="0"><wp:simplePos x="0" y="0"/>`
+      + `<wp:positionH relativeFrom="column"><wp:posOffset>${block.wrap === 'right' ? 5000000 : 0}</wp:posOffset></wp:positionH>`
+      + `<wp:positionV relativeFrom="paragraph"><wp:posOffset>0</wp:posOffset></wp:positionV><wp:extent cx="${cx}" cy="${cy}"/>`
+      + `<wp:wrapSquare wrapText="bothSides"/>${docPr}${graphic}</wp:anchor>`
+    : `<wp:inline><wp:extent cx="${cx}" cy="${cy}"/>${docPr}${graphic}</wp:inline>`;
+  return `<w:p><w:r><w:drawing>${drawing}</w:drawing></w:r></w:p>`;
 }
 
 const table = (rows) => `<w:tbl>${rows.map((r) => `<w:tr>${r.map((c) => `<w:tc><w:p>${run({ text: c })}</w:p></w:tc>`).join('')}</w:tr>`).join('')}</w:tbl>`;
@@ -134,6 +143,12 @@ export const CONVENTION_VARIANTS = [
   { p: '[ESSAY QUESTION]' },
   { p: 'Feedback:', style: 'Heading5' },
   { p: 'Answer: Your instructor will assess your answer.', style: 'Heading5' },
+  { image: 'letter.png', alt: 'Letter from the director.', size: [2857500, 1905000] },
+  { p: 'Figure 2. A letter from the director closing out the objective.', style: 'Subtitle' },
+  { p: 'Well done, astronomer.' },
+  { p: 'You have finished the first objective.' },
+  { image: 'badge.png', alt: 'Mission badge', size: [952500, 952500], wrap: 'right' },
+  { p: 'Director Vega' },
   { p: 'Simulator help', style: 'Heading2' },
   { p: '1. Open the simulator in a new tab.' },
   { p: '2. Press play and watch the orbit.' },
